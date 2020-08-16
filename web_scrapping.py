@@ -57,6 +57,10 @@ def articulo_scrapping():
         articulo = Articulo(None, perfil.id_perfil, titulo[i], nro_citas[i], anio_pub[i])
         # print("Articulo [{}]: Titulo: {}, Numero Citas: {}, Año: {}".format(i, articulo.titulo, articulo.nro_citas, articulo.anio)
         insert_articulo(articulo)
+    if titulo == []:
+        print("No hay más artículos en este perfil.")
+        return False
+    return True
 
 
 def insert_articulo(articulo):
@@ -78,8 +82,13 @@ def insert_articulo(articulo):
 
 # MAIN
 url = input("Inserte URL del perfil Google Scholar: ")
-# url = "https://scholar.google.com/citations?user=CDt8mKsAAAAJ&hl=es&oi=ao"
-html = urlopen(url)
+cstart = 0
+pagesize = 100
+stop = False
+
+url_paginacion = "&cstart={}&pagesize={}".format(cstart, pagesize)
+
+html = urlopen(url + url_paginacion)     # url = "https://scholar.google.com/citations?user=CDt8mKsAAAAJ&hl=es&oi=ao"
 soup = BeautifulSoup(html, 'lxml')
 
 perfil = Perfil(None, None, None, None) # Crea un perfil vacio
@@ -88,5 +97,15 @@ user_scrapping()    # Scrapea el perfil del investigador
 insert_perfil(perfil)   #Inserta el perfil a la base de datos 
 # print(perfil.id_perfil)
 
-articulo_scrapping()    #Scrappea e inserta cada articulo en la base de datos
+while stop == False:
+    print("CSTART: " + str(cstart))
+    if articulo_scrapping() == False:   #Scrappea e inserta cada articulo en la base de datos
+        stop == True
+        print("Variable STOP: " + str(stop))
+        break; 
+    cstart += pagesize
+    url_paginacion = "&cstart={}&pagesize={}".format(cstart, pagesize)
+    html = urlopen(url + url_paginacion)     # url = "https://scholar.google.com/citations?user=CDt8mKsAAAAJ&hl=es&oi=ao"
+    soup = BeautifulSoup(html, 'lxml')
+
 
